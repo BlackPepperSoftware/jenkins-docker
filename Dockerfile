@@ -1,4 +1,5 @@
-FROM java:8-jdk
+# [BP] Use our base Java with unlimited strength crypto
+FROM blackpepper/java:oracle-java8
 
 RUN apt-get update && apt-get install -y wget git curl zip && rm -rf /var/lib/apt/lists/*
 
@@ -10,7 +11,7 @@ ENV JENKINS_SLAVE_AGENT_PORT 50000
 # ensure you use same uid
 RUN useradd -d "$JENKINS_HOME" -u 1000 -m -s /bin/bash jenkins
 
-# Jenkins home directoy is a volume, so configuration and build history 
+# Jenkins home directory is a volume, so configuration and build history
 # can be persisted and survive image upgrades
 VOLUME /var/jenkins_home
 
@@ -27,12 +28,13 @@ RUN curl -fL https://github.com/krallin/tini/releases/download/v0.5.0/tini-stati
 
 COPY init.groovy /usr/share/jenkins/ref/init.groovy.d/tcp-slave-agent-port.groovy
 
-ENV JENKINS_VERSION 1.609.3
-ENV JENKINS_SHA f5ad5f749c759da7e1a18b96be5db974f126b71e
+ENV JENKINS_VERSION 1.628
+ENV JENKINS_SHA 07d1b90ee61c438f4082a0473470f56f22b6142b
 
 # could use ADD but this one does not check Last-Modified header 
 # see https://github.com/docker/docker/issues/8331
-RUN curl -fL http://mirrors.jenkins-ci.org/war-stable/$JENKINS_VERSION/jenkins.war -o /usr/share/jenkins/jenkins.war \
+# [BP] Use /war/ instead of /war-stable/
+RUN curl -fL http://mirrors.jenkins-ci.org/war/$JENKINS_VERSION/jenkins.war -o /usr/share/jenkins/jenkins.war \
   && echo "$JENKINS_SHA /usr/share/jenkins/jenkins.war" | sha1sum -c -
 
 ENV JENKINS_UC https://updates.jenkins-ci.org
